@@ -1,0 +1,571 @@
+;from allstar-techreport
+S -> A c
+S -> A d
+A -> a A
+A -> b
+
+Expr -> Expr + Term
+Expr -> Term
+Term -> i
+
+; removed recursion
+Expr -> Term Expr1
+Expr1 -> + Term Expr1
+Expr1 ->
+Term -> i
+
+;https://cstheory.stackexchange.com/questions/6438/determine-if-a-ll2-grammar-is-strong
+;grammar that is LL(2), but not strong LL(2)
+S -> a A a
+S -> b A b a
+A -> b
+A ->
+
+;https://cstheory.stackexchange.com/questions/6438/determine-if-a-ll2-grammar-is-strong
+;strong LL(2), no context needed
+S -> a A a
+S -> b A2 b a
+A -> b
+A ->
+A2 -> b
+A2 ->
+
+;https://stackoverflow.com/questions/10634197/ll2-language-that-is-not-ll1
+;S -> a S A | epsilon
+;A -> a^k b S | c
+;LL(2)
+S -> a S A
+S ->
+A -> a b S
+A -> c
+
+;LL(3)
+S -> a S A
+S ->
+A -> a a b S
+A -> c
+
+;LL(*)
+S -> a S C
+S ->
+C -> A b S
+C -> c
+A -> A a
+A ->
+
+;LL(*)
+;if repeat a*, it doesn't know it is before or after b*
+;if would be a*b+a*, will be LL(2)
+;regular expression: a*b*a*
+;main problem: b may exists or may not exists
+;knowledge is in two cases: meeting b or meeting $
+;if meet $ - no backtrack needed, if meet b, read b, next read a
+; S: first is if 'a' or 'b', second if $
+; A: a* both, first is if a+b* second if b*a*
+; B: LL(1) first 'b', second 'a' or $
+;manually is posssible write it without backtracking with nested block while:
+;while (c=='a') getc();
+;if (c=='b') {
+;   while (c=='b') getc();
+;   if (c!='a' && c != EOF)
+;     error();
+;   while (c=='a') getc();
+;   if (c != EOF)
+;        error();
+;} else if (c!=EOF)
+;   return;
+;return;
+S -> A B A
+A -> a A
+A ->
+B -> b B
+B ->
+
+;test with https://www.cs.princeton.edu/courses/archive/spring22/cos320/LL1/index.html
+;https://cs.stackexchange.com/questions/93144/why-is-this-grammar-an-ll2-grammar
+S -> a a A
+A -> a A c
+A -> b B c
+B -> b B c
+B -> b c
+
+; solution 'dangling else' by L07SecondTry.pdf (17 LALR and 17 LR(1))
+;S=stmt, e=Expr, i=if, t=then, W=WithElse, o=Other statements
+S -> i e t S
+S -> i e t W e S
+S -> o
+W -> i e t W e W
+W -> o
+
+; 'dangling else' - exact solution by TechnikiKompilacji.pdf (13 LALR and 20 LR(1))
+;S = stmt, M = matched_stmt,U=unmatched_stmt,o = other,
+;i=if, e-expr, t=then (bez 'S->o')
+S -> M
+S -> U
+M -> i e t M e M
+M -> o
+U -> i e t S
+U -> i e t M e U
+
+;if .. then .. else - simple (9 states LALR and 16 LR(1))
+;correct if choosed S7, if choosed reduction - even is error analysis ibtibtses
+S -> i b t S e S
+S -> i b t S
+S -> s
+
+;else L-long s else, S- short bez else, G-general (conflict LR(1))
+G -> S
+G -> L
+G -> s
+S -> i b t G
+L -> i b t L e G
+L -> s
+
+; + and * equal priority, but * has right-hand connection
+; warning, it can't be such defined, because conflict
+E -> E + i
+E -> i * E
+E -> i
+
+; + and * equal priority
+E -> E + i
+E -> E * i
+E -> i
+
+;7.17 page. 203 simplified version grammars from 7.12a, chain elimination
+E -> E + T
+E -> T
+T -> T * i
+T -> i
+
+;typical grammar not LR(0), from 7.12 page.195 Compiler Construction : Waite, William M., Goos, Gerhard
+E -> E + T
+E -> T
+T -> T * F
+T -> F
+F -> ( E )
+F -> i
+
+;left recursion
+E -> E + T
+E -> T
+T -> T * F
+T -> F
+F -> i
+
+;left recursion
+;ambiguous with different priority
+E -> E + E
+E -> E * E
+E -> i
+
+;More extended example ambiguous from Node21 from Lambda
+E -> E + E
+E -> E * E
+E -> ( E )
+E -> i
+E -> n
+
+;is not SLR - example from Ch4b.pdf, 14 states LR1, 10 states Lalr
+S -> L = R
+S -> R
+L -> * R
+L -> i
+R -> L
+
+;supposedly from http://kompilatory.agh.edu.pl/ is not LR(0)
+S -> S a
+S -> a
+
+;LR(1) has the same number of states as Lalr
+;grammar not SLR(1) but LALR(1) 7.15 page 200
+;can be added start production Z->A
+A -> a B b
+A -> a d c
+A -> b B c
+A -> b d d
+B -> d
+
+;from notebook Lalr(1) from canonic but is LR(0), is LL(1)
+S -> C C
+C -> e C
+C -> d
+
+; is LL(1)
+; from notebook page 56 and http://www.jambe.co.nz/UNI/FirstAndFollowSets.html
+; as example for First and Follow
+; changes: E'->G, T'->U, no eps,id->i
+E -> T G
+G -> + T G
+G ->
+T -> F U
+U -> * F U
+U ->
+F -> ( E )
+F -> i
+
+;from http://en.wikipedia.org/wiki/LR_parser simple not LR(0) reduction-reduction conflict, is SLR
+E -> A 1
+E -> B 2
+A -> 1
+B -> 1
+
+;from http://en.wikipedia.org/wiki/LR_parser simple not LR(0) shift-reduction conflict, is SLR
+E -> 1 E
+E -> 1
+
+;from http://en.wikipedia.org/wiki/LR_parser which I translated
+E -> E * B
+E -> E + B
+E -> B
+B -> 0
+B -> 1
+
+;book page 148 LR(2) i LL(3)
+X -> Y
+X -> b Y a
+Y -> c
+Y -> c a
+
+;LALR(1) has a shift/reduce conflict; LALR(2) is conflict-free. Both have 6 states.
+S -> A a
+A -> c
+A -> c a
+
+;2-4-Parser-LR(1)-czesc-2.pdf
+S -> S a S b
+S ->
+
+;4 second example for LR(1)- it can'be be simplified to lalr(1)
+;conflict R-R
+;notebook MetTransl page 86
+S -> a A d
+S -> b B d
+S -> a B e
+S -> b A e
+A -> c
+B -> c
+
+; if will error?
+; <HTML> -> <DocType Opt> '<html' <Parameters> '>' <Head> <Frameset> <Body> '</html>'
+E -> d H F B
+H -> H h
+H ->
+F -> F f
+F ->
+B -> B b
+B ->
+
+;big stack for language +++++...
+E -> + E
+E ->
+
+;small stack for language +++++...
+E -> E +
+E ->
+
+;regular expression definition
+E -> C
+E -> E | C
+C -> F
+C -> C F
+F -> U
+F -> U *
+F -> U +
+U -> c
+U -> ( E )
+
+;example to test error recovery
+;bi=i+i+ii, next continuations ;,+,e (e it's out because after is i)
+;best see - what is after i, = or +
+E -> b C e
+C -> C ; R
+C -> R
+R -> i = S
+S -> S + i
+S -> i
+
+;simpler example to error recovery
+;bii
+E -> b C e
+C -> C ; i
+C -> i
+
+; strings accc..ccccb or bccc..ccca - for error testing
+E -> a C b
+E -> b C a
+C -> C c
+C ->
+
+;example recovery with replacement, for example error in keyword then
+;iaaaea
+E -> i a t a e a
+
+;first version simplan language
+E -> D B
+D ->
+D -> L ;
+L -> i
+L -> L , i
+B -> { C }
+C ->
+C -> C S
+S -> i = X
+X -> T
+X -> X + T
+X -> X - T
+T -> F
+T -> T * F
+T -> T / F
+F -> i
+F -> n
+
+;right and left operator
+E -> & E
+E -> E + E
+E -> i
+
+;two right operators - no conflict
+E -> & E
+E -> ^ E
+E -> i
+
+;two with lower, one with higher and one with highest
+E -> E O E
+E -> i
+O -> +
+O -> -
+O -> *
+O -> ^
+
+;two with lower, one with higher and one with highest
+E -> E + E
+E -> E - E
+E -> E * E
+E -> E ^ E
+E -> i
+
+;ambiguous with two equals
+E -> E + E
+E -> E - E
+E -> i
+
+;ambiguous with one operator
+E -> E + E
+E -> i
+
+;the simplest ambiguous
+S -> S S
+S -> i
+
+;3
+;for calc
+E -> E + T
+E -> E - T
+E -> E | T
+E -> E \ T
+E -> T
+T -> T * F
+T -> T / F
+T -> T _ F
+T -> T % F
+T -> T & F
+T -> T # F
+T -> T @ F
+T -> T ^ F
+T -> F
+F -> - F
+F -> ( E )
+F -> i
+F -> i ( E )
+F -> c
+
+C -> C i
+C -> i
+
+; chain
+S -> S E
+S -> E
+E -> F
+F -> T
+T -> i
+
+S -> S i
+S -> i
+
+;sample LR(0) 7.11 page 194
+E -> E + F
+E -> F
+F -> i
+F -> ( E )
+
+;language: +*+*..*+
+A -> B +
+B -> A *
+B ->
+;sample,that you should not limit yourself only to the first production symbol
+;should be {+} for first
+
+;sample from gatevidyalay for left recursion
+A -> A B d
+A -> A a
+A -> a
+B -> B e
+B -> b
+
+;sample from gatevidyalay for left recursion
+S -> ( L )
+S -> a
+L -> L , S
+L -> S
+
+;sample from gatevidyalay for left recursion
+S -> S 0 S 1 S
+S -> 0 1
+
+;sample from gatevidyalay for left recursion
+S -> A
+A -> A d
+A -> A e
+A -> a B
+A -> a c
+B -> b B c
+B -> f
+
+;sample from gatevidyalay for left recursion
+A -> A A a
+A -> b
+
+;sample from gatevidyalay for indirect left recursion
+A -> B a
+A -> A a
+A -> c
+B -> B b
+B -> A b
+B -> d
+
+;sample from gatevidyalay for indirect left recursion
+X -> X S b
+X -> S a
+X -> b
+S -> S b
+S -> X a
+S -> a
+
+;sample from gatevidyalay for indirect left recursion
+S -> A a
+S -> b
+A -> A c
+A -> S d
+A ->
+
+;sample from gatevidyalay for left factoring
+S -> i E t S
+S -> i E t S e S
+S -> a
+E -> b
+
+;sample from gatevidyalay for left factoring
+A -> a A B
+A -> a B c
+A -> a A c
+
+;sample from gatevidyalay for left factoring
+S -> b S S a a S
+S -> b S S a S b
+S -> b S b
+S -> a
+
+;sample from gatevidyalay for left factoring
+S -> a S S b S
+S -> a S a S b
+S -> a b b
+S -> b
+
+;sample from gatevidyalay for left factoring
+S -> a
+S -> a b
+S -> a b c
+S -> a b c d
+
+;sample from gatevidyalay for left factoring
+S -> a A d
+S -> a B
+A -> a
+A -> a b
+B -> c c d
+B -> d d c
+
+;Denny-Malloy IELR 2010 Fig. 1, p. 945; DOI 10.1016/j.scico.2009.08.001
+;Raw unambiguous grammar: aaa, aaaa, bab, baab; non-LR(1), LR(2).
+;Paper policy: token a is left-associative (reduce the S/R conflict).
+;Canonical LR(1) with that policy accepts aaa,bab,baab; LALR also loses baab.
+;Policy is documentation only: this corpus reader does not execute precedence.
+S -> a A a
+S -> b A b
+A -> a
+A -> a a
+
+;Denny-Malloy IELR 2010 Fig. 2, p. 945; DOI 10.1016/j.scico.2009.08.001
+;Ambiguous: baaa has two trees. Preserve production order for future R/R policy tests.
+;Paper uses the earlier production for unresolved R/R conflicts.
+;IELR preserves canonical conflict resolution; it does not make this grammar LR(1).
+S -> a A a
+S -> a B b
+S -> a C c
+S -> b A b
+S -> b B a
+S -> b C a
+A -> a a
+B -> a a
+C -> a a
+
+;Denny-Malloy IELR 2010 Fig. 3, p. 953; DOI 10.1016/j.scico.2009.08.001
+;Ambiguous; Fig. 2 with the final token of productions 2 and 3 changed to a.
+;Preserve production order: default earlier-rule R/R resolution is significant.
+;Tests mutated conflicts: canonical policy accepts baaa, the studied Menhir did not.
+S -> a A a
+S -> a B a
+S -> a C a
+S -> b A b
+S -> b B a
+S -> b C a
+A -> a a
+B -> a a
+C -> a a
+
+;Denny-Malloy IELR 2010 Fig. 4, p. 954; DOI 10.1016/j.scico.2009.08.001
+;Ambiguous: aaa has two trees. Pager vs the token-wise Menhir compatibility test.
+;An existing R/R conflict on a must not justify a new R/R conflict on b.
+;Preserve production order for future earlier-rule conflict resolution tests.
+S -> a A a
+S -> a A b
+S -> a B a
+S -> b A a
+S -> b B b
+A -> a
+B -> a
+
+;Denny-Malloy IELR 2010 Fig. 5, p. 955; DOI 10.1016/j.scico.2009.08.001
+;Goto follows, nullable rules and predecessor splitting (Tables 4 and 5).
+;Paper policy: production 9 (E -> epsilon) has higher precedence than token a.
+;Policy is documentation only; classifications apply to the raw grammar below.
+S -> a A B a
+S -> b A B b
+A -> a C D E
+B -> c
+B ->
+C -> D
+D -> a
+E -> a
+E ->
+
+;Denny-Malloy IELR 2010 Fig. 6, p. 959; DOI 10.1016/j.scico.2009.08.001
+;Auxiliary example for goto follows through nullable chains, not an IELR benchmark.
+S -> a A a
+S -> a a b
+S -> b A b
+A -> B C
+B -> a
+C -> D
+D ->

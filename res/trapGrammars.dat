@@ -1,0 +1,30 @@
+; Direct cycle without terminal progress.
+A -> A
+A -> a
+
+; Mutual unit cycle.
+A -> B
+A -> a
+B -> A
+B -> b
+
+; A productive alternative containing a terminal does not hide the unit cycle.
+A -> B
+A -> a
+A -> c B
+B -> A
+B -> b
+
+; Three-nonterminal unit cycle.
+A -> B
+B -> C
+C -> A
+C -> c
+
+; The nullable C makes the surrounding A/B cycle consume no terminal.
+A -> B C
+A -> a
+B -> A C
+B -> b
+C ->
+C -> c

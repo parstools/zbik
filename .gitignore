@@ -43,6 +43,7 @@
 build/
 Build/
 build-*/
+cmake-build-*/
 
 # CMake generated files
 CMakeFiles/
@@ -67,3 +68,16 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# IDE configuration
+.idea/
+
+# Local assistant configuration and session notes
+.agents/
+.codex/
+.aws/
+HANDOFF-*.md
+
+# Generated corpus results
+res/grammars_result.dat
+res/grammars_report.txt
