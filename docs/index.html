@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Żbik – LR(k) grammar analysis and parser construction in C++20</title>
+<meta name="description" content="Żbik is a C++20 library for grammar analysis and deterministic LR(k)/LALR(k) parser construction: FIRST/FOLLOW(k), conflict diagnostics, ambiguity search, table compression and Unicode lexers.">
+<link rel="icon" type="image/jpeg" href="images/zbik-logo-cropped.jpeg">
+<meta property="og:title" content="Żbik">
+<meta property="og:description" content="A C++20 library for grammar analysis and deterministic LR(k)/LALR(k) parser construction.">
+<meta property="og:image" content="images/zbik-logo-cropped.jpeg">
+<style>
+  :root {
+    --bg: #f7f6f1;
+    --surface: #ffffff;
+    --text: #1b2a44;
+    --muted: #5b6475;
+    --border: #e1ddd2;
+    --accent: #2f7d5b;
+    --accent-text: #ffffff;
+    --code-bg: #efece4;
+    --shadow: 0 1px 2px rgba(27, 42, 68, .06), 0 8px 24px rgba(27, 42, 68, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161d;
+      --surface: #1a2029;
+      --text: #e7ebf1;
+      --muted: #9aa5b3;
+      --border: #2a333f;
+      --accent: #57c08f;
+      --accent-text: #0b1118;
+      --code-bg: #232b36;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, Cantarell, sans-serif;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 48px 0 24px; display: grid; grid-template-columns: 260px 1fr; gap: 36px; align-items: center; }
+  header img { width: 260px; height: 260px; border-radius: 18px; box-shadow: var(--shadow); background: #fff; }
+  h1 { font-size: 2.8rem; margin: 0 0 4px; letter-spacing: -.02em; }
+  .name { color: var(--muted); margin: 0 0 14px; }
+  .tagline { font-size: 1.22rem; margin: 0; }
+  .buttons { margin: 24px 0 0; display: flex; gap: 12px; flex-wrap: wrap; }
+  .button {
+    display: inline-block; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none;
+    border: 1px solid var(--border); color: var(--text); background: var(--surface);
+  }
+  .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  section { padding: 40px 0 6px; }
+  h2 { font-size: 1.6rem; margin: 0 0 16px; letter-spacing: -.01em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 8px; font-size: 1.06rem; }
+  .card p { margin: 0; color: var(--muted); }
+  code, pre { font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", "DejaVu Sans Mono", Menlo, monospace; font-size: .9em; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .note { color: var(--muted); }
+  ul.docs { margin: 0; padding-left: 20px; }
+  ul.docs li { margin: 4px 0; }
+  footer { padding: 40px 0 56px; color: var(--muted); font-size: .92rem; text-align: center; }
+  @media (max-width: 680px) {
+    header { grid-template-columns: 1fr; text-align: center; padding-top: 32px; gap: 20px; }
+    header img { margin: 0 auto; width: 200px; height: 200px; }
+    .buttons { justify-content: center; }
+    h1 { font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <img src="images/zbik-logo-cropped.jpeg" alt="Żbik logo: a wildcat beside an LR automaton, FIRST and FOLLOW sets" width="260" height="260">
+  <div>
+    <h1>Żbik</h1>
+    <p class="name">Polish for <em>wildcat</em></p>
+    <p class="tagline">A C++20 library for grammar analysis and deterministic LR(k)/LALR(k) parser construction.</p>
+    <div class="buttons">
+      <a class="button primary" href="https://github.com/parstools/zbik">View on GitHub</a>
+      <a class="button" href="https://parstools.github.io/borsuk/">Borsuk, built on it</a>
+      <a class="button" href="#use">Use it</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section>
+    <h2>What it does</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>LR parsing with more lookahead</h3>
+        <p>Canonical LR(k), LALR(k) built directly or by merging, SLR(1), conflict diagnostics for the grammar
+          itself, and a stack-based parser runtime that never backtracks.</p>
+      </div>
+      <div class="card">
+        <h3>Grammar analysis</h3>
+        <p>NULLABLE, FIRST(k) and FOLLOW(k), productivity and reachability, recursion and cycle detection, and the
+          minimum and maximum lengths a symbol can yield.</p>
+      </div>
+      <div class="card">
+        <h3>Sequences and ambiguity</h3>
+        <p>Enumerate terminal sequences with their derivation trees up to a length bound, and search for a sequence
+          with two different trees. A bounded search finds ambiguity; not finding it proves nothing.</p>
+      </div>
+      <div class="card">
+        <h3>EBNF</h3>
+        <p>A restricted programmatic EBNF model converts to BNF, and the helper productions remember where they came
+          from, so that diagnostics point at what you wrote.</p>
+      </div>
+      <div class="card">
+        <h3>Compact tables</h3>
+        <p>ACTION and GOTO tables compressed for storage, and exported as a DSL or as JSON.</p>
+      </div>
+      <div class="card">
+        <h3>Lexers</h3>
+        <p>Regular expressions to NFA and DFA, byte and UTF-8 lexers, and lexer classes that the parser switches
+          by context.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="use">
+    <h2>Use it</h2>
+    <p>Żbik needs CMake 4.0, a C++20 compiler and ICU (<code>uc</code>); GoogleTest for its tests.</p>
+<pre><code>git clone https://github.com/parstools/zbik.git
+cmake -S zbik -B zbik/build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake --build zbik/build -j4
+ctest --test-dir zbik/build --output-on-failure</code></pre>
+    <p>The <code>zbik_core</code> library embeds in another CMake project:</p>
+<pre><code>add_subdirectory(path/to/zbik)
+target_link_libraries(my_parser PRIVATE zbik_core)</code></pre>
+    <p>The <code>zbik</code> command-line tool analyzes and classifies a corpus of BNF grammars; it does not
+      generate parser source code. For a grammar language, ASTs, semantic analysis and code generation on top of
+      Żbik, see <a href="https://parstools.github.io/borsuk/">Borsuk</a>.</p>
+<pre><code>build/zbik res/grammars.dat /tmp/grammars-result.dat --max-lr=3</code></pre>
+  </section>
+
+  <section>
+    <h2>Documentation</h2>
+    <ul class="docs">
+      <li><a href="https://github.com/parstools/zbik/blob/main/docs/lr-development.md">LR development and architecture</a></li>
+      <li><a href="https://github.com/parstools/zbik/blob/main/docs/selective-merging.md">Selective LR(k) merging</a></li>
+      <li><a href="https://github.com/parstools/zbik/blob/main/docs/ebnf-regressions.md">EBNF regression grammars</a></li>
+      <li><a href="https://github.com/parstools/zbik/blob/main/docs/lexer-classes.md">Parser-controlled lexer classes</a></li>
+      <li><a href="https://github.com/parstools/zbik/blob/main/grammar/README.md">Compressed-table format</a></li>
+      <li><a href="https://github.com/parstools/zbik/blob/main/docs/profiling.md">Performance measurements</a></li>
+    </ul>
+    <p class="note">Each document also has a Polish version, with the <code>.pl.md</code> suffix.</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  Apache-2.0 · <a href="https://github.com/parstools/zbik">github.com/parstools/zbik</a>
+</footer>
+</body>
+</html>

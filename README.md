@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/images/zbik-logo-cropped.jpeg" alt="Żbik — wildcat and LR parser illustration" width="200"></p>
+
 # zbik
 
 A C++20 library for grammar analysis and deterministic LR(k)/LALR(k) parser construction.
@@ -63,4 +65,4 @@ The CLI classifies grammars; it does not generate parser source code.
 
 Polish versions are available alongside these documents with the `.pl.md` suffix.
 
-![Żbik — wildcat and LR parser illustration](docs/images/zbik-logo-cropped.jpeg)
+Project page: https://parstools.github.io/zbik/
